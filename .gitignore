@@ -141,3 +141,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Credenciales y archivos secretos de n8n/APIs
+credentials.json
+secrets.json
+config.json
+*.pem
