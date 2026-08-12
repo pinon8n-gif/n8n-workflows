@@ -8,7 +8,8 @@
 
 | # | Proyecto / Flujo | Integraciones principales | Estado |
 |---|------------------|---------------------------|--------|
-| 01 | [Nombre de tu Primer Flujo](./01-nombre-de-tu-flujo) | n8n, OpenAI, Google Sheets | 🟢 Completado |
+| 01 | [AI-Powered Tech Intelligence Pipeline](./01-tech-intelligence-pipeline) | n8n, OpenRouter (LLMs), RSS, Google Sheets, Telegram | 🟢 Completado |
+
 ---
 
 ## 🚀 ¿Cómo importar y usar estos flujos?
@@ -17,7 +18,7 @@
 2. Descarga o copia el contenido del archivo `workflow.json`.
 3. Abre tu instancia de **n8n**.
 4. En el menú superior de un nuevo flujo, selecciona **Import from JSON** (o usa el atajo `Ctrl + V` / `Cmd + V`).
-5. **Configura las credenciales:** Asigna tus propias claves de API (OpenAI, Webhooks, Google, etc.) en los nodos correspondientes.
+5. **Configura las credenciales:** Asigna tus propias claves de API (OpenRouter, Google Sheets OAuth2, Telegram Bot) en los nodos correspondientes.
 
 ---
 
@@ -30,5 +31,6 @@
 
 ## 👤 Autor
 
-Desarrollado por **Andrés Pino** * **GitHub:** [@pinon8n-gif](https://github.com/pinon8n-gif)  
+Desarrollado por **Andrés Pino**
+* **GitHub:** [@pinon8n-gif](https://github.com/pinon8n-gif)  
 * **Especialidad:** n8n Developer & AI Automation Engineer
