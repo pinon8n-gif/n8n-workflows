@@ -1,0 +1,413 @@
+{
+  "name": "1- AI-Powered Tech Intelligence Pipeline: Automated RSS Curation & Scoring (no credentials)",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\nActúa como un Consultor de Startups e Inteligencia de Negocios. Tu tarea es analizar la noticia provista.\n\nDATOS DE ENTRADA:\n- TÍTULO: {{ $json.title }}\n- CONTENIDO: {{ $json.contentSnippet }}\n\nINSTRUCCIONES DE OBLIGATORIO CUMPLIMIENTO:\n1. Toda tu respuesta debe ser redactada estrictamente en idioma ESPAÑOL.\n2. En el campo \"analisis\", debes incluir obligatoriamente una mención directa o referencia al \"TÍTULO\" proporcionado para dar contexto completo.\n3. Responde ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido. No agregues introducciones, textos introductorios, ni cierres de saludo.\n\nFORMATO JSON DE SALIDA EXIGIDO:\n{\n  \"analisis\": \"Escribe aquí el análisis fluido en español, mencionando el título del artículo de forma natural.\",\n  \"puntuacion\": 8,\n  \"sugerencia\": \"Escribe aquí el consejo accionable en español derivado de la noticia.\"\n}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "e6c74362-f783-4e35-87ef-5a6b67a6dee0",
+      "name": "chain",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        -144
+      ],
+      "id": "c0bf10cb-a781-4c5d-b457-1f764b183597",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.technologyreview.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -144
+      ],
+      "id": "e0514a5a-6eb4-4388-ba68-2cc2691a63cc",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "=ID_DE_TU_HOJA_DE_CALCULO\n(Es el código largo que aparece en la URL de Google Sheets entre /d/ y /edit)\nEjemplo: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0 o Hoja 1 (Es el nombre de la pestaña abajo en Google Sheets, o el ID gid al final de la URL)",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        -144
+      ],
+      "id": "3bb9f2b4-65f5-48dc-8920-6cb2819df865",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ /* REEMPLAZAR CON EL CHAT ID O USAR UNA VARIABLE */ }} /*   Opción A (Mensaje directo a un usuario):    Ingresa el ID del usuario (ejemplo: 123456789).   Puedes obtener tu ID personal en Telegram usando el bot @userinfobot.   \n\nOpción B (Canal o Grupo):   Ingresa el ID del canal/grupo (ejemplo: -1001234567890) o el nombre público (ejemplo: @MiCanal).   Recuerda agregar al Bot como Administrador del canal/grupo. */",
+        "text": "=🚀 *\\NOTICIA DE ALTO IMPACTO DETECTADA/*  \n\n📌 *Título:\n* [{{ $json.Titulo }}]\n\n📅 *Fecha:*\n[{{ $json.Fecha }}] \n\n🤖 *Análisis de la IA:*\n_{{ $json.Resumen }}_\n______________________________________________________\n📊 Relevancia: \n⭐ [{{ $json['Puntuacion '] }}] / 10 📈 \n\n\nGuardado automáticamente en el Historial Cloud.",
+        "replyMarkup": "=none",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        -144
+      ],
+      "id": "548e8b97-cff7-4c75-ad82-adc868243ef5",
+      "name": "Send a text message",
+      "webhookId": "a340176d-e2cf-4cac-8fff-c8ca9c2d72c2",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "rnX8kl4zAEaJ26wu",
+          "name": "your token bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "title",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -144
+      ],
+      "id": "0779b2b7-6e77-4ede-8ce0-679c14da77a1",
+      "name": "Remove Duplicates",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "puntuacion",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -144
+      ],
+      "id": "1a49fa90-096d-4203-b099-705eed47420f",
+      "name": "Sort"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -144
+      ],
+      "id": "69c5a550-e566-4af8-a57e-4e09f0b2ce6f",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ \n  (() => {\n    try {\n      // 1. Capturar el texto crudo proveniente del nodo chain de manera segura\n      let rawText = \"\";\n      if ($json.text) {\n        rawText = $json.text;\n      } else if ($json.resultado && typeof $json.resultado === 'string') {\n        rawText = $json.resultado;\n      } else if (typeof $json === 'string') {\n        rawText = $json;\n      } else {\n        rawText = JSON.stringify($json);\n      }\n\n      // 2. Limpiar posibles saltos de línea e intentar capturar la estructura del objeto JSON\n      rawText = rawText.replace(/\\\\n/g, \"\\n\");\n      const jsonMatch = rawText.match(/\\{[\\s\\S]*\\}/);\n      \n      if (!jsonMatch) throw new Error(\"Estructura JSON no encontrada\");\n\n      // 3. Remover bloques de formato markdown si el modelo los incluyó\n      const cleanText = jsonMatch[0].replace(/```json|```/g, \"\").trim();\n      const parsed = JSON.parse(cleanText);\n\n      // 4. Asegurar que la puntuación se guarde como un valor numérico limpio para el nodo Sort\n      let score = 0;\n      if (parsed.puntuacion !== undefined) {\n        score = parseInt(parsed.puntuacion, 10) || 0;\n      }\n\n      // 5. Devolver las propiedades normalizadas en la raíz del objeto\n      return {\n        analisis: parsed.analisis || \"Sin análisis disponible.\",\n        puntuacion: score,\n        sugerencia: parsed.sugerencia || \"Sin sugerencia disponible.\"\n      };\n\n    } catch (e) {\n      // Fallback de contingencia en caso de error de parseo\n      return { \n        analisis: \"Error al procesar el formato de la IA.\",\n        puntuacion: 0,\n        sugerencia: \"Por favor, verificar la salida cruda devuelta por OpenRouter.\"\n      };\n    }\n  })()\n}}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        -144
+      ],
+      "id": "bc946f10-15ab-4f60-b99a-d52631bb14c6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -32
+      ],
+      "id": "5ad62fd5-92d8-433f-8096-536d2ce8e6f3",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "zPr5b0zNGPb9M8ek",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "[ETAPA 1] Ingesta & Data Cleansing\n\n- Activación cronometrada (Schedule Trigger) para extraer fuentes de información de manera constante.\n\n- Extracción de artículos mediante Feeds RSS.\n\n- Normalización de datos con JavaScript (Nodo Code) para eliminar etiquetas HTML, espacios duplicados y estandarizar formatos (Title Case), reduciendo el consumo posterior de tokens.",
+        "height": 320,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "2c162c16-6d7d-4b99-bc08-cfe0f01d7c4a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "[ETAPA 3] Smart Routing Logic\n\n- Evaluación del scoring devuelto por la IA.\n\n- Filtrado condicional: solo los artículos con una puntuación superior a 7 (contenido de alto valor) continúan en la tubería principal.",
+        "height": 336,
+        "width": 416,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "b1e29286-495b-4bc4-8675-abf1fdef674c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "[ETAPA 4] Data Destination & Storage\n\n- Persistencia de datos estructurados en el repositorio central.\n- Centralización del contenido curado y calificado, listo para ser consumido por el usuario final o equipos de marketing.",
+        "height": 304,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "44defc77-21bd-4af6-a0f1-e9442e82b0e1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "[ETAPA 2] AI-Powered Curation Engine\n- Procesamiento iterativo de artículos individuales a través de un Sub-workflow.\n- Implementación de un Agente Avanzado de IA (OpenAI GPT) con memoria contextual.\n- Evaluación y scoring automático automatizado de la relevancia del contenido bajo criterios técnicos predefinidos.",
+        "height": 400,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "3cadae99-4fde-41e1-a3fb-7d5b3184f195",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos los datos del elemento actual de forma directa\nconst item = $json;\n\n// 2. Copiamos el objeto original para no perder ninguna propiedad\nlet cleanJson = { ...item };\n\n// 3. Estandarización de Títulos (Title Case básico y limpieza de espacios)\nif (cleanJson.title) {\n  cleanJson.title = cleanJson.title\n    .trim() // Elimina espacios al inicio y al final\n    .replace(/\\s+/g, ' ') // Reemplaza múltiples espacios por uno solo\n    .toLowerCase()\n    .replace(/\\b\\w/g, c => c.toUpperCase()); // Convierte a Title Case\n}\n\n// 4. Limpieza del contenido/resumen (Remover etiquetas HTML si las hay)\nif (cleanJson.summary) {\n  cleanJson.summary = cleanJson.summary\n    .replace(/<\\/?[^>]+(>|$)/g, \"\") // Elimina cualquier etiqueta HTML oculta\n    .trim()\n    .replace(/\\s+/g, ' ');\n}\n\nif (cleanJson.content) {\n  cleanJson.content = cleanJson.content\n    .replace(/<\\/?[^>]+(>|$)/g, \"\")\n    .trim()\n    .replace(/\\s+/g, ' ');\n}\n\n// 5. Devolvemos el JSON limpio listo para el siguiente nodo\nreturn { json: cleanJson };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -144
+      ],
+      "id": "625fe025-ab6e-4c77-87d8-d14502bad6a6",
+      "name": "JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JavaScript": {
+      "main": [
+        [
+          {
+            "node": "chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8451cfa0-313e-4061-bf9b-cfe04f29f46e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "J8w5AdINNQGHFvoI",
+  "tags": []
+}
