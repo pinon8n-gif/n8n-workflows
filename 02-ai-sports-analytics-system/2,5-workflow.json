@@ -1,0 +1,314 @@
+{
+  "name": "2,5-Real-Time Sports Analytics: API Data Extraction & Summarization Engine (no credentials)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "56cdfb02-60ab-4dcf-87a1-465f070c9acf",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.football-data.org/v4/matches",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "dateFrom",
+              "value": "2026-06-12"
+            },
+            {
+              "name": "dateTo",
+              "value": "2026-06-12"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        0
+      ],
+      "id": "f078655e-2277-4baf-a9ef-941fb5813055",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xqJYThisWKqMvDF2",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=YOUR_SHEET_NAME_OR_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=NOMBRE_DE_TU_HOJA_AQUÍ",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        944,
+        0
+      ],
+      "id": "a72515ad-063d-4aad-a34a-1be574aa5432",
+      "name": "Update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "matches",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        464,
+        0
+      ],
+      "id": "5292ca3d-339e-4a3d-af7a-ca78c31878f2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesa dinámicamente cada partido proveniente de la API (o mantiene estructura estándar)\nconst item = $json;\n\nreturn {\n  json: {\n    homeTeam: item.homeTeam?.name || \"Equipo Local\",\n    awayTeam: item.awayTeam?.name || \"Equipo Visitante\",\n    scoreHome: item.score?.fullTime?.home ?? 0,\n    scoreAway: item.score?.fullTime?.away ?? 0,\n    matchName: `${item.homeTeam?.name || 'Local'} vs. ${item.awayTeam?.name || 'Visitante'}`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "3ee66f4f-7df2-44af-b702-8ae046eed9e5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID_OR_CHANNEL_ID",
+        "text": "={{ $json.resumenFinal }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "9e30b456-0e94-4a71-9d9a-c41fe2bc0428",
+      "name": "Send a text message",
+      "webhookId": "f0c23215-1a22-423b-b382-c9878ea104a4",
+      "credentials": {
+        "telegramApi": {
+          "id": "rnX8kl4zAEaJ26wu",
+          "name": "your token bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 1] Extraer Datos de API\n• Disparo nocturno automático (10:00 PM).\n• Petición HTTP a la API REST de Football-Data.\n• Descomposición del JSON de marcadores con Split Out.\n",
+        "height": 320,
+        "width": 628,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -176
+      ],
+      "id": "58ccf52f-2822-4b48-b204-5f69850040c1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 2] Transformación & Base de Datos\n• Normalización de nombres y marcadores con JavaScript.\n• Mapeo y actualización de marcadores en Google Sheets.",
+        "height": 320,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -176
+      ],
+      "id": "f2891fc8-c534-4533-b08d-15a278865000",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 3] Reporte de Resultados\n• Construcción de la síntesis final de la jornada.\n• Notificación masiva de marcadores en Telegram.",
+        "height": 320,
+        "width": 416,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -176
+      ],
+      "id": "01590513-f879-4264-a942-9d7650f645e3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Toma todos los resultados procesados en el flujo y arma un único resumen\nconst allMatches = $input.all();\n\nlet resumen = \"🏆 *RESUMEN OFICIAL DE LA JORNADA - MUNDIAL 2026* ⚽\\n\\n\";\n\nallMatches.forEach((match) => {\n  const data = match.json;\n  resumen += `• *${data.PARTIDO}*: ${data[\"GOLES EQIPO 1\"]} - ${data[\"GOLES EQUIPO 2\"]}\\n`;\n});\n\nresumen += \"\\n📊 *Todos los datos han sido registrados exitosamente en la base de datos.*\";\n\nreturn [{ json: { resumenFinal: resumen } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "7a105cce-a941-4bf4-89a5-4a7094c75be9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulación exacta de la respuesta que devuelve la API de Football-Data\nreturn [\n  {\n    json: {\n      matches: [\n        {\n          homeTeam: { name: \"México\" },\n          awayTeam: { name: \"Sudáfrica\" },\n          score: {\n            fullTime: { home: 3, away: 1 }\n          }\n        },\n        {\n          homeTeam: { name: \"Rep. de Corea\" },\n          awayTeam: { name: \"Chequia\" },\n          score: {\n            fullTime: { home: 0, away: 2 }\n          }\n        },\n        {\n          homeTeam: { name: \"España\" },\n          awayTeam: { name: \"Brasil\" },\n          score: {\n            fullTime: { home: 2, away: 2 }\n          }\n        }\n      ]\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        0
+      ],
+      "id": "87f2c9b7-2138-4459-a432-39c2c4c94572",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "48586654-ba89-4198-85da-4233300c1fe2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "4Cv70uZVrFKVXmdB",
+  "tags": []
+}

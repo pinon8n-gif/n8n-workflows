@@ -1,0 +1,1874 @@
+{
+  "name": "2-AI Sports Broadcaster: Automated Daily Match Preview & Alert System sin credenciales",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        48
+      ],
+      "id": "a662b3fb-15b9-4025-a0bd-b424d047b9ff",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        48
+      ],
+      "id": "25b13548-3e34-4e3f-a896-acbb94417438",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtener la fecha de hoy en formato DD/M/AAAA o D/M/AAAA\nconst hoy = new Date();\nconst dia = hoy.getDate();\nconst mes = hoy.getMonth() + 1; // Los meses van de 0 a 11\nconst anio = hoy.getFullYear();\nconst fechaHoy = `${dia}/${mes}/${anio}`;\n\n// 2. Filtrar los 104 partidos\nreturn items.filter(partido => {\n  // Leemos la columna FECHA de tu nueva tabla\n  const fechaPartido = partido.json[\"FECHA\"] ? partido.json[\"FECHA\"].toString().trim() : \"\";\n  \n  // Comparamos si coincide con el día de hoy\n  return fechaPartido === fechaHoy;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        48
+      ],
+      "id": "2fb9047b-7ea7-48d3-aa20-7da089feb12e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Actúa como un apasionado y experto comentarista de fútbol internacional y periodista deportivo en vivo. \n\nCONTEXTO ACTUAL:\nEstamos viviendo el Mundial en este momento. Hoy se disputa un partido crucial.\n\nDATOS DEL ENCUENTRO DE HOY:\n- partido : {{ $json.PARTIDO }}\n- Estadio / Grupo: {{ $json['SEDE / ESTADIO'] }}\n\nINSTRUCCIONES DE REDACCIÓN:\n1. Escribe en ESPAÑOL con un tono emocionante, analítico y profesional (estilo narrador de cadena deportiva internacional).\n2. Habla en TIEMPO PRESENTE, como si el partido estuviera a punto de comenzar en unas horas. Hace una breve previa táctica destacando las fortalezas de ambos equipos.\n3. Mantén el texto conciso y directo al grano (máximo 3 párrafos cortos), ideal para ser leído rápidamente en un canal de Telegram.\n4. Incluye emojis deportivos para mejorar la legibilidad del mensaje.\n5. Responde ÚNICAMENTE con el texto del análisis. No agregues introducciones como \"Aquí tienes la previa:\" ni saludos finales.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        592,
+        48
+      ],
+      "id": "f74c87c9-9d65-473a-9e1f-fd4588b70eee",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Obtenemos los datos que vienen del nodo anterior\nconst item = $json;\n\n// 2. Copiamos el objeto original\nlet cleanJson = { ...item };\n\n// 3. Modificamos el campo 'mensaje' de forma segura\nif (cleanJson.mensaje && typeof cleanJson.mensaje === 'string') {\n  cleanJson.mensaje = cleanJson.mensaje\n    .trim()\n    .replace(/\\s+/g, ' ')\n    .toLowerCase()\n    .replace(/\\b\\w/g, c => c.toUpperCase());\n} else {\n  // Si el mensaje no existe o está vacío, le asignamos un texto por defecto para que no falle\n  cleanJson.mensaje = \"Sin descripción o análisis disponible.\";\n}\n\n// 4. Devolvemos el JSON limpio\nreturn { json: cleanJson };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        48
+      ],
+      "id": "52a3b28a-bc43-4fed-a435-5926c78d21b5",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        48
+      ],
+      "id": "b4810be5-515e-411b-a895-c5c7088360d1",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=YOUR_CHAT_ID_OR_CHANNEL_ID",
+        "text": "=📋 ¡ANÁLISIS MUNDIALISTA DE HOY!\n⚽ Partido: {{ $('Get row(s) in sheet').item.json[\"PARTIDO\"] }}\n🏆 Grupo: {{ $('Get row(s) in sheet').item.json[\"GRUPO\"] }}\n🕒 Hora: {{ $('Get row(s) in sheet').item.json[\"HORA LOCAL\"] }} | 📺 TV: {{ $('Get row(s) in sheet').item.json[\"TV\"] }}\n\n📄 El ojo de la IA: > {{ $('Code in JavaScript1').item.json.analisis_previa }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        48
+      ],
+      "id": "7dcdcfaf-7bbe-4e95-8eab-47e12dff2b2f",
+      "name": "Send a text message",
+      "webhookId": "d8088140-2e98-4e06-8e84-6a3518ff2a61",
+      "credentials": {
+        "telegramApi": {
+          "id": "rnX8kl4zAEaJ26wu",
+          "name": "your token bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        608,
+        176
+      ],
+      "id": "d3b14c03-3e63-4451-8f7b-c979166e6930",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ulZK5LajdP5PKvWo",
+          "name": "your OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 1] Ingesta y Filtrado de Datos\n• Ejecucción diaria automatizada (8:00 AM).\n• Consulta del fixture de partidos en Google Sheets.",
+        "height": 336,
+        "width": 368,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -128
+      ],
+      "id": "d2a92a03-88c8-44b3-89db-649e8440a60d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 2 Generación] y Análisis con IA\n• Estructuración del prompt dinámico en JavaScript.\n• Generación del análisis táctico en vivo con OpenRouter (LLM).",
+        "height": 336,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -128
+      ],
+      "id": "22fb9ee9-13a3-40c5-8c61-7ebcc1fe2f17",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## [ETAPA 3] Almacenamiento e Integración (Telegram)\n• Normalización de texto generado con JS.\n• Actualización del historial en Google Sheets.\n• Publicación inmediata en Telegram.",
+        "height": 336,
+        "width": 480,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "04703602-c3e7-42bb-9c9d-7677243a8b5c",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {
+    "Get row(s) in sheet": [
+      {
+        "json": {
+          "row_number": 2,
+          "Nº PARTIDO": 1,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Mexico City",
+          "PARTIDO": "México vs. Sudáfrica",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "6/8/2026"
+        }
+      },
+      {
+        "json": {
+          "row_number": 3,
+          "Nº PARTIDO": 2,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Guadalajara",
+          "PARTIDO": "Rep. de Corea vs. Checa",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "12/5/2026",
+          "GOLES EQIPO 1": 0,
+          "GOLES EQUIPO 2": 2
+        }
+      },
+      {
+        "json": {
+          "row_number": 4,
+          "Nº PARTIDO": 3,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Canadá vs. Bosnia/Herzeg.",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "12/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 5,
+          "Nº PARTIDO": 4,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "EE.UU. vs. Paraguay",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "12/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 6,
+          "Nº PARTIDO": 5,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Qatar vs. Suiza",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "13/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 7,
+          "Nº PARTIDO": 6,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Brasil vs. Marruecos",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "13/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 8,
+          "Nº PARTIDO": 7,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Haití vs. Escocia",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "13/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 9,
+          "Nº PARTIDO": 8,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Australia vs. Turquía",
+          "HORA LOCAL": "0:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "14/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 10,
+          "Nº PARTIDO": 9,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Alemania vs. Curazao",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "14/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 11,
+          "Nº PARTIDO": 10,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Países Bajos vs. Japón",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "14/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 12,
+          "Nº PARTIDO": 11,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Costa de Marfil vs. Ecuador",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "14/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 13,
+          "Nº PARTIDO": 12,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Monterrey",
+          "PARTIDO": "Suecia vs. Túnez",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "14/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 14,
+          "Nº PARTIDO": 13,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "España vs. Cabo Verde",
+          "HORA LOCAL": "12:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "15/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 15,
+          "Nº PARTIDO": 14,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "Bélgica vs. Egipto",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "15/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 16,
+          "Nº PARTIDO": 15,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Arabia Saudita vs. Uruguay",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "15/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 17,
+          "Nº PARTIDO": 16,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "IR Irán vs. Nueva Zelanda",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "15/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 18,
+          "Nº PARTIDO": 17,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Francia vs. Senegal",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "16/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 19,
+          "Nº PARTIDO": 18,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Irak vs. Noruega",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "16/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 20,
+          "Nº PARTIDO": 19,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Argentina vs. Argelia",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "16/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 21,
+          "Nº PARTIDO": 20,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Austria vs. Jordán",
+          "HORA LOCAL": "0:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "17/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 22,
+          "Nº PARTIDO": 21,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Portugal vs. RD Congo",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "17/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 23,
+          "Nº PARTIDO": 22,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Inglaterra vs. Croacia",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "17/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 24,
+          "Nº PARTIDO": 23,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Ghana vs. Panamá",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "17/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 25,
+          "Nº PARTIDO": 24,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Mexico City",
+          "PARTIDO": "Uzbekistán vs. Colombia",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "17/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 26,
+          "Nº PARTIDO": 25,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "Checa vs. Sudáfrica",
+          "HORA LOCAL": "12:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "18/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 27,
+          "Nº PARTIDO": 26,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Suiza vs. Bosnia/Herzeg.",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "18/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 28,
+          "Nº PARTIDO": 27,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Canadá vs. Qatar",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "18/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 29,
+          "Nº PARTIDO": 28,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Guadalajara",
+          "PARTIDO": "México vs. Rep. de Corea",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "18/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 30,
+          "Nº PARTIDO": 29,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "EE.UU. vs. Australia",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "19/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 31,
+          "Nº PARTIDO": 30,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Escocia vs. Marruecos",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "19/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 32,
+          "Nº PARTIDO": 31,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Brasil vs. Haití",
+          "HORA LOCAL": "20:30",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "19/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 33,
+          "Nº PARTIDO": 32,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Turquía vs. Paraguay",
+          "HORA LOCAL": "23:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "19/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 34,
+          "Nº PARTIDO": 33,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Países Bajos vs. Suecia",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "20/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 35,
+          "Nº PARTIDO": 34,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Alemania vs. Costa de Marfil",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "20/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 36,
+          "Nº PARTIDO": 35,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Ecuador vs. Curazao",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "20/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 37,
+          "Nº PARTIDO": 36,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Monterrey",
+          "PARTIDO": "Túnez vs. Japón",
+          "HORA LOCAL": "0:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "21/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 38,
+          "Nº PARTIDO": 37,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "España vs. Arabia Saudita",
+          "HORA LOCAL": "12:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "21/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 39,
+          "Nº PARTIDO": 38,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Bélgica vs. IR Irán",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "21/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 40,
+          "Nº PARTIDO": 39,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Uruguay vs. Cabo Verde",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "21/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 41,
+          "Nº PARTIDO": 40,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Nueva Zelanda vs. Egipto",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "21/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 42,
+          "Nº PARTIDO": 41,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Argentina vs. Austria",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "22/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 43,
+          "Nº PARTIDO": 42,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Francia vs. Irak",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "22/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 44,
+          "Nº PARTIDO": 43,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Noruega vs. Senegal",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "22/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 45,
+          "Nº PARTIDO": 44,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Jordán vs. Argelia",
+          "HORA LOCAL": "23:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "22/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 46,
+          "Nº PARTIDO": 45,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Portugal vs. Uzbekistán",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "23/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 47,
+          "Nº PARTIDO": 46,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Inglaterra vs. Ghana",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "23/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 48,
+          "Nº PARTIDO": 47,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Panamá vs. Croacia",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "23/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 49,
+          "Nº PARTIDO": 48,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Guadalajara",
+          "PARTIDO": "Colombia vs. RD Congo",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "23/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 50,
+          "Nº PARTIDO": 49,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Suiza vs. Canadá",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 51,
+          "Nº PARTIDO": 50,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "Bosnia/Herzeg. vs. Qatar",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "B",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 52,
+          "Nº PARTIDO": 51,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Escocia vs. Brasil",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 53,
+          "Nº PARTIDO": 52,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "Marruecos vs. Haití",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "C",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 54,
+          "Nº PARTIDO": 53,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Mexico City",
+          "PARTIDO": "Checa vs. México",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 55,
+          "Nº PARTIDO": 54,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Monterrey",
+          "PARTIDO": "Sudáfrica vs. Rep. de Corea",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "A",
+          "FECHA": "24/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 56,
+          "Nº PARTIDO": 55,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Curazao vs. Costa de Marfil",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 57,
+          "Nº PARTIDO": 56,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Ecuador vs. Alemania",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "E",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 58,
+          "Nº PARTIDO": 57,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Japón vs. Suecia",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 59,
+          "Nº PARTIDO": 58,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Túnez vs. Países Bajos",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "F",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 60,
+          "Nº PARTIDO": 59,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Turquía vs. EE.UU.",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 61,
+          "Nº PARTIDO": 60,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Paraguay vs. Australia",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "D",
+          "FECHA": "25/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 62,
+          "Nº PARTIDO": 61,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Noruega vs. Francia",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 63,
+          "Nº PARTIDO": 62,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Senegal vs. Irak",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "I",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 64,
+          "Nº PARTIDO": 63,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Cabo Verde vs. Arabia Saudita",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 65,
+          "Nº PARTIDO": 64,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Guadalajara",
+          "PARTIDO": "Uruguay vs. España",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "H",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 66,
+          "Nº PARTIDO": 65,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "Egipto vs. IR Irán",
+          "HORA LOCAL": "23:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 67,
+          "Nº PARTIDO": 66,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Nueva Zelanda vs. Bélgica",
+          "HORA LOCAL": "23:00",
+          "TV": "",
+          "GRUPO": "G",
+          "FECHA": "26/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 68,
+          "Nº PARTIDO": 67,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Panamá vs. Inglaterra",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 69,
+          "Nº PARTIDO": 68,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Croacia vs. Ghana",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "L",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 70,
+          "Nº PARTIDO": 69,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Colombia vs. Portugal",
+          "HORA LOCAL": "19:30",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 71,
+          "Nº PARTIDO": 70,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "RD Congo vs. Uzbekistán",
+          "HORA LOCAL": "19:30",
+          "TV": "",
+          "GRUPO": "K",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 72,
+          "Nº PARTIDO": 71,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Argelia vs. Austria",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 73,
+          "Nº PARTIDO": 72,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Jordán vs. Argentina",
+          "HORA LOCAL": "22:00",
+          "TV": "",
+          "GRUPO": "J",
+          "FECHA": "27/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 74,
+          "Nº PARTIDO": 73,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Dieciseisavos (2A vs. 2B)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "28/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 75,
+          "Nº PARTIDO": 74,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Dieciseisavos (1C vs. 2F)",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "29/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 76,
+          "Nº PARTIDO": 75,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Dieciseisavos (1E vs. 3-ABCDF)",
+          "HORA LOCAL": "18:30",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "29/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 77,
+          "Nº PARTIDO": 76,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Monterrey",
+          "PARTIDO": "Dieciseisavos (1F vs. 2C)",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "29/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 78,
+          "Nº PARTIDO": 77,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Dieciseisavos (2E vs. 2I)",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "30/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 79,
+          "Nº PARTIDO": 78,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Dieciseisavos (1I vs. 3-CDEFGH)",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "30/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 80,
+          "Nº PARTIDO": 79,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Mexico City",
+          "PARTIDO": "Dieciseisavos (1A vs. 3-CEFHI)",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "30/6/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 81,
+          "Nº PARTIDO": 80,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "Dieciseisavos (1L vs. 3-EHIJK)",
+          "HORA LOCAL": "12:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "1/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 82,
+          "Nº PARTIDO": 81,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "Dieciseisavos (1G vs. 3-AEHJI)",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "1/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 83,
+          "Nº PARTIDO": 82,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "San Francisco Bay Area",
+          "PARTIDO": "Dieciseisavos (1D vs. 3-BDEIL)",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "1/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 84,
+          "Nº PARTIDO": 83,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Dieciseisavos (1H vs. 2J)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "2/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 85,
+          "Nº PARTIDO": 84,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Toronto",
+          "PARTIDO": "Dieciseisavos (2K vs. 2L)",
+          "HORA LOCAL": "19:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "2/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 86,
+          "Nº PARTIDO": 85,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Dieciseisavos (1B vs. 3-EFGU)",
+          "HORA LOCAL": "23:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "2/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 87,
+          "Nº PARTIDO": 86,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Dieciseisavos (2D vs. 2G)",
+          "HORA LOCAL": "14:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "3/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 88,
+          "Nº PARTIDO": 87,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Dieciseisavos (1J vs. 2H)",
+          "HORA LOCAL": "18:00",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "3/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 89,
+          "Nº PARTIDO": 88,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Dieciseisavos (1K vs. 3-DEJL)",
+          "HORA LOCAL": "21:30",
+          "TV": "",
+          "GRUPO": "Ronda de 32",
+          "FECHA": "3/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 90,
+          "Nº PARTIDO": 89,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Houston",
+          "PARTIDO": "Octavos (W73 vs. W75)",
+          "HORA LOCAL": "13:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "4/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 91,
+          "Nº PARTIDO": 90,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Philadelphia",
+          "PARTIDO": "Octavos (W74 vs. W77)",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "4/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 92,
+          "Nº PARTIDO": 91,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Octavos (W76 vs. W78)",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "5/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 93,
+          "Nº PARTIDO": 92,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Mexico City",
+          "PARTIDO": "Octavos (W79 vs. W80)",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "5/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 94,
+          "Nº PARTIDO": 93,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Octavos (W83 vs. W84)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "6/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 95,
+          "Nº PARTIDO": 94,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Seattle",
+          "PARTIDO": "Octavos (W81 vs. W82)",
+          "HORA LOCAL": "20:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "6/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 96,
+          "Nº PARTIDO": 95,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "Octavos (W86 vs. W88)",
+          "HORA LOCAL": "12:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "7/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 97,
+          "Nº PARTIDO": 96,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Vancouver",
+          "PARTIDO": "Octavos (W85 vs. W87)",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "Octavos de final",
+          "FECHA": "7/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 98,
+          "Nº PARTIDO": 97,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Boston",
+          "PARTIDO": "Cuartos (W89 vs. W90)",
+          "HORA LOCAL": "16:00",
+          "TV": "",
+          "GRUPO": "Cuartos de final",
+          "FECHA": "9/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 99,
+          "Nº PARTIDO": 98,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Los Angeles",
+          "PARTIDO": "Cuartos (W93 vs. W94)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Cuartos de final",
+          "FECHA": "10/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 100,
+          "Nº PARTIDO": 99,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Cuartos (W91 vs. W92)",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "Cuartos de final",
+          "FECHA": "11/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 101,
+          "Nº PARTIDO": 100,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Kansas City",
+          "PARTIDO": "Cuartos (W95 vs. W96)",
+          "HORA LOCAL": "21:00",
+          "TV": "",
+          "GRUPO": "Cuartos de final",
+          "FECHA": "11/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 102,
+          "Nº PARTIDO": 101,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Dallas",
+          "PARTIDO": "Semifinal (W97 vs. W98)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Semifinales",
+          "FECHA": "14/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 103,
+          "Nº PARTIDO": 102,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Atlanta",
+          "PARTIDO": "Semifinal (W99 vs. W100)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Semifinales",
+          "FECHA": "15/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 104,
+          "Nº PARTIDO": 103,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "Miami",
+          "PARTIDO": "Tercer Lugar (RU101 vs. RU102)",
+          "HORA LOCAL": "17:00",
+          "TV": "",
+          "GRUPO": "Tercer lugar",
+          "FECHA": "18/7/2026",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 105,
+          "Nº PARTIDO": 104,
+          "ANALISIS IA": "",
+          "SEDE / ESTADIO": "New York/New Jersey",
+          "PARTIDO": "Gran Final (W101 vs. W102)",
+          "HORA LOCAL": "15:00",
+          "TV": "",
+          "GRUPO": "Final",
+          "FECHA": "",
+          "GOLES EQIPO 1": "",
+          "GOLES EQUIPO 2": ""
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "31c8ec14-c3fe-4953-9da6-6108cdc88cdb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "oihUwiDhobBWxSQG",
+  "tags": []
+}
