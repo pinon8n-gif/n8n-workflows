@@ -1,0 +1,505 @@
+{
+  "name": "3\"AI-Driven Lead Qualification & Multi-Channel Routing Engine: Facebook Ads & CRM Integration\" copy",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        96,
+        96
+      ],
+      "id": "b5c8ff97-e4cf-49dc-a42f-bdea2a27b5eb",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "Q7jVm2nP3r311FuM",
+          "name": "Google Sheets Trigger account."
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ccb8281d-aac6-4761-b1bc-2a24f07f21df",
+              "name": "nombre",
+              "value": "=={{ $json.full_name || $json.name || $json['¿Cuál es tu nombre?'] || 'Lead sin nombre' }}",
+              "type": "string"
+            },
+            {
+              "id": "1e795334-1f90-4d6e-aab9-ef68d45ed6af",
+              "name": "correo",
+              "value": "=={{ $json.email || $json['Ingresa tu correo electrónico'] || 'sin_correo@ejemplo.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "e94c620c-4352-4c03-861f-580b621d8a0f",
+              "name": "telefono",
+              "value": "=={{ $json.phone_number || $json.phone || $json['Número de WhatsApp'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c83668de-9356-447a-92ee-18456b3149c6",
+              "name": "detalles de la empresa",
+              "value": "=={{ $json['¿Cuentanos sobre tu empresa?'] || $json['¿Cuéntanos sobre tu empresa?'] || $json.detalles_empresa || $json.text || $json.mensaje || 'Sin detalles proporcionados' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        0
+      ],
+      "id": "d0895e6d-cb0f-4f23-ac55-2e1edf240b5a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza el siguiente prospecto:\n\n- Nombre: {{ $json.nombre }}\n- Correo: {{ $json.correo }}\n- Teléfono: {{ $json.telefono }}\n- Detalles de la Empresa / Mensaje: {{ $json['detalles de la empresa'] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un evaluador comercial de nivel Senior especializado en calificación de prospectos (Lead Scoring).\n\nTU OBJETIVO:\nAnalizar la información entregada por el usuario y evaluar si la empresa/lead califica como \"Empresa_Grande\" (True/False).\n\nCRITERIOS DE CLASIFICACIÓN (Empresa_Grande = true):\n- Menciona contar con más de 10-20 empleados o equipos medianos/grandes.\n- Menciona ser una corporación, compañía con presencia nacional/internacional o múltiples sedes.\n- Utiliza lenguaje corporativo (ej. logística internacional, desarrollo enterprise, flotas, alto volumen de facturación).\n\nRESTRICCIÓN DE FORMATO ESTRICTA:\nDebes responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido. \nNO agregues introducciones, saludos, comentarios ni bloques de formato markdown (NUNCA utilices ```json o ```).\n\nESTRUCTURA EXACTA DEL JSON DE SALIDA:\n{\n  \"Empresa_Grande\": boolean,\n  \"Resumen\": \"Breve resumen de 1 oración indicando a qué se dedica el lead y su tamaño.\",\n  \"Sugerencia\": \"Recomendación comercial táctica para el equipo de ventas.\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        624,
+        0
+      ],
+      "id": "2838d640-487a-46a2-b9c3-f2d866b1a914",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fe35012d-907d-4625-8119-76d70d90a542",
+                    "leftValue": "={{ $json.Empresa_Grande }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4f441708-4750-4e2e-8349-626535e89f72",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "88209ce1-18cf-4211-95df-ec81f7945436",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "TU_CHAT_ID_O_CANAL_AQUÍ",
+        "text": "=🚨 *NUEVO LEAD VIP DETECTADO* 🚨\n__________________________________\n\n👤 *Cliente:* {{ $json.nombre }}\n📧 *Correo:* {{ $json.correo }}\n📱 *Teléfono:* {{ $json.telefono }}\n\n📊 *Resumen de la IA:*\n_{{ $json.Resumen }}_\n\n💡 *Sugerencia Comercial:*\n{{ $json.Sugerencia }}\n\n__________________________________\n📲 [Iniciar chat directo por WhatsApp](https://wa.me/{{ $json.telefono.replace(/[^0-9]/g, '') }})",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -48
+      ],
+      "id": "9d5a719a-a502-4beb-8110-c60f63b23505",
+      "name": "Send a text message",
+      "webhookId": "8f5796d3-c251-4efe-87c2-38672c38cff8",
+      "credentials": {
+        "telegramApi": {
+          "id": "rnX8kl4zAEaJ26wu",
+          "name": "your token bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        -48
+      ],
+      "id": "a6a69307-36be-4199-855e-e46fa3d421e4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        112
+      ],
+      "id": "1f9e203a-e040-4f07-866d-c415fb236d0d",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos la lista completa de respuestas de IA y la lista de leads originales\nconst iaItems = $input.all();\nconst originalLeads = $('Edit Fields').all();\n\n// 2. Iteramos sobre cada ítem para emparejarlos por su posición/índice\nreturn iaItems.map((item, index) => {\n  const rawResponse = item.json.text || item.json.output || item.json;\n  const leadOriginal = originalLeads[index]?.json || {};\n  \n  let data = {};\n\n  try {\n    if (typeof rawResponse === 'object' && rawResponse !== null) {\n      data = rawResponse;\n    } else {\n      const cleanJson = String(rawResponse)\n        .replace(/```json/gi, '')\n        .replace(/```/g, '')\n        .trim();\n      data = JSON.parse(cleanJson);\n    }\n  } catch (error) {\n    data = {\n      Empresa_Grande: false,\n      Resumen: \"Error al interpretar JSON de la IA.\",\n      Sugerencia: \"Revisar respuesta manualmente.\"\n    };\n  }\n\n  return {\n    json: {\n      Empresa_Grande: Boolean(data.Empresa_Grande),\n      Resumen: data.Resumen || 'Sin resumen disponible.',\n      Sugerencia: data.Sugerencia || 'Sin sugerencia.',\n      nombre: leadOriginal.nombre || 'N/A',\n      correo: leadOriginal.correo || 'N/A',\n      telefono: leadOriginal.telefono || 'N/A'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "d5290c7a-470a-4e7b-8ce6-9a5b6ea70791",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        624,
+        160
+      ],
+      "id": "c3a774a4-6d4b-4bd1-adee-9f44fa4e13b1",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "zShyFB5AWK3D0uou",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "page": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "form": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookLeadAdsTrigger",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "ea42733c-71a5-4f95-ae34-451aaa9baaff",
+      "name": "Facebook Lead Ads Trigger",
+      "webhookId": "48c5f260-9544-4dd4-b854-c15cc28f5de1",
+      "credentials": {
+        "facebookLeadAdsOAuth2Api": {
+          "id": "NMjfiikpM5fS7aTx",
+          "name": "Facebook Lead Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## ETAPA 1: INGESTIÓN Y NORMALIZACIÓN DE LEADS\n  Captura multi-canal en tiempo real (Meta Ads + Hojas de Cálculo) y estandarización del esquema de datos (nombre, correo, teléfono, empresa).                                                                                                             ",
+        "height": 496,
+        "width": 512,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -224
+      ],
+      "id": "8347a668-3653-4802-88eb-ec6edfa6804f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## ETAPA 2: CALIFICACIÓN INTELIGENTE (IA & SCORING)\nProcesamiento del contexto comercial mediante OpenRouter (JSON estructurado) y desinfección/mapeo seguro en JavaScript.",
+        "height": 496,
+        "width": 544,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -224
+      ],
+      "id": "3a72207b-4860-4f13-98af-5ce8a9c62791",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## ETAPA 3: MOTOR DE DECISIÓN\nSegmentación lógica basada en el flag Empresa_Grande. Separa la atención prioritaria de la gestión estándar.",
+        "height": 496,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        -224
+      ],
+      "id": "e5d64626-079d-4ea8-a2aa-500ee0f11500",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## ETAPA 4: ACTIVACIÓN Y REGISTRO \n\nEnvío de alerta instantánea por Telegram para leads VIP con enlace directo a WhatsApp y actualización de base de datos dividida.",
+        "height": 496,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -224
+      ],
+      "id": "fa161e26-0de2-4aaf-8981-1367419b0ca2",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Lead Ads Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5e3a03a5-45a8-44e0-8493-a89d1cca674b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "SNOjkUP7pkzpttId",
+  "tags": []
+}
