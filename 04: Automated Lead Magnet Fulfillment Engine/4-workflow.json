@@ -1,0 +1,348 @@
+{
+  "name": "4-\"Automated Lead Magnet Fulfillment & Multi-Channel Notification Engine\". copy",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "=",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        -16
+      ],
+      "id": "b1c37403-c1bb-4f40-8a40-4760044b1a47",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xjJtqON8TNT5qtko",
+          "name": "your google oAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "¡Bienvenido! Aquí tienes tu recurso",
+        "message": "=<p>¡Hola!</p> <p>Muchas gracias por registrarte. Adjunto a este correo encontrarás el recurso que solicitaste.</p> <p>¡Que lo disfrutes!</p>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        -16
+      ],
+      "id": "ec2a102e-c98b-409b-b6c1-a4428364923a",
+      "name": "Send a message",
+      "webhookId": "e4af3156-6e2b-409b-9861-ed72d06a1e63",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "emVcecSv40mZ2ZYh",
+          "name": "your Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1056,
+        -16
+      ],
+      "id": "1d1035b4-feb9-4dbc-a65a-fbedfa4cb1cd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID_OR_CHANNEL_ID",
+        "text": "=🚨 *¡Nuevo Lead Registrado!* 🚨\n\n👤 *Nombre:* {{ $('Webhook').item.json.body.nombre }}\n✉️ *Email:* {{ $('Webhook').item.json.body.email }}\n\n_El correo de bienvenida con el PDF ya ha sido enviado automáticamente._",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        -16
+      ],
+      "id": "469e21ee-4f2e-4af1-8a75-5cacc95e12b6",
+      "name": "Send a text message",
+      "webhookId": "f06ba516-b986-44d7-90df-14badfc08ed7",
+      "credentials": {
+        "telegramApi": {
+          "id": "rnX8kl4zAEaJ26wu",
+          "name": "your token bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\n// Limpieza básica de datos\nconst nombreLimpio = body.nombre ? body.nombre.trim() : 'Lead Sin Nombre';\nconst emailLimpio = body.email ? body.email.trim().toLowerCase() : '';\n\n// Validación regex de email\nconst emailValido = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailLimpio);\n\nreturn {\n  json: {\n    nombre: nombreLimpio,\n    email: emailLimpio,\n    Valido: emailValido,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        0
+      ],
+      "id": "d0fe056c-50d4-4b60-b6b7-2f4bd3bf9d35",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "702c0f1f-6e23-4bc2-b6f8-4c344423671a",
+              "leftValue": "={{ $json.Valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        0
+      ],
+      "id": "46dd9fdd-1e11-4779-9a3d-e5d079012384",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"error\",\n  \"message\": \"El correo electrónico proporcionado no tiene un formato válido.\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1104,
+        384
+      ],
+      "id": "07ded3a9-0489-4547-ac59-10c98c53d853",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "## 01 | INGESTION & DATA CLEANING\n• Capta payloads en tiempo real vía POST Request.\n• Ejecuta sanitización con JS Code (trimming, lowercase).\n• Genera bandera booleana mediante Regex Email Matcher.",
+        "height": 400,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -208
+      ],
+      "id": "8e27037c-41ec-453e-b42c-86cad6b75505",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d5c3ed3a-64a8-4403-9ae4-18a4a6b0e754",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "b813f2dd-c5b8-4387-b9b9-440d2499a1da",
+      "name": "Webhook",
+      "webhookId": "d5c3ed3a-64a8-4403-9ae4-18a4a6b0e754"
+    },
+    {
+      "parameters": {
+        "content": "## 02 | VALIDATION & ROUTING\n• Evalúa la condición $json.Valido.\n• Rama True: Permite el avance al Pipeline de Entregas.\n• Rama False: Desvía el flujo al bloque de Error Handling.",
+        "height": 400,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -208
+      ],
+      "id": "33425d50-a13b-4521-8d8e-666a3a9f7880",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 03 | EXCEPTION HANDLER (400)\n  • Bloquea inyección de datos basura.\n  • Retorna una respuesta HTTP 400 Bad Request estructurada en JSON.",
+        "height": 320,
+        "width": 496,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        928,
+        208
+      ],
+      "id": "1864448a-3ffb-4a2a-92b6-ac213c6c4413",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 04 | FULFILLMENT & OMNICHANNEL ALERT\n• Upsert dinámico del lead validado en Google Sheets.\n• Fetch de binario (PDF Lead Magnet) vía HTTP GET.\n• Despacho de email personalizado con archivo adjunto vía Gmail API.\n• Notificación de alta prioridad (< 5s SLA) vía Telegram Bot.",
+        "height": 400,
+        "width": 688,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -208
+      ],
+      "id": "995ed5ae-7ca6-4a06-bbef-5a739f2641e2",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b935f7d8-ee5d-4a6f-a870-170192918667",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "owQlnOlrEJDRFcbk",
+  "tags": []
+}
