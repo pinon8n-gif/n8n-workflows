@@ -12,7 +12,8 @@
 | 02 | [AI-Powered Sports Analytics & Broadcaster System](./02-sports-analytics) | n8n, API REST (football-data), OpenRouter (LLMs), Google Sheets, Telegram | 🟢 Completado |
 | 03 | [AI-Driven Lead Qualification & Routing Engine](./03-lead-scoring) | n8n, Meta Ads, OpenRouter (LLMs), Google Sheets, Telegram, Node.js | 🟢 Completado |
 | 04 | [Automated Lead Magnet Fulfillment & Notification Engine](./04-lead-magnet-fulfillment) | n8n, Webhooks, Google Sheets, Gmail, Telegram, Node.js (Regex) | 🟢 Completado |
-| 05 | *Proyecto 5 (Arquitectura en desarrollo)* | *Definiendo herramientas...* | 🟡 En proceso |
+| 05 | [Automated B2B CRM-to-Billing Pipeline](./05-crm-stripe-billing) | n8n, HubSpot API, Stripe API, Node.js (Regex) | 🟢 Completado |
+| 06 | *Proyecto 6 (Arquitectura en desarrollo)* | *Definiendo herramientas...* | 🟡 En proceso |
 
 ---
 
@@ -22,7 +23,7 @@
 2. Descarga o copia el contenido del archivo `workflow.json`.
 3. Abre tu instancia de n8n.
 4. En el menú superior de un nuevo flujo, selecciona **Import from JSON** (o usa el atajo `Ctrl + v` / `Cmd + v`).
-5. **Configura las credenciales:** Asigna tus propias claves de API (OpenRouter, Google Sheets OAuth2, Gmail OAuth2, Telegram Bot, etc.) en los nodos correspondientes.
+5. **Configura las credenciales:** Asigna tus propias claves de API en los nodos correspondientes.
 
 ---
 
