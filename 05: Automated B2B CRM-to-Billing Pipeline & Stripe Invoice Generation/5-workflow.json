@@ -1,0 +1,431 @@
+{
+  "name": "5-Automated B2B CRM-to-Billing Pipeline & Stripe Invoice Generation copy",
+  "nodes": [
+    {
+      "parameters": {
+        "eventsUi": {
+          "eventValues": []
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hubspotTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        0
+      ],
+      "id": "ae5da151-05b2-48a4-b32c-9ac1c333c03b",
+      "name": "HubSpot Trigger",
+      "webhookId": "c4682f2e-a9af-4cac-ad63-5de2a3b1abd2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0074488b-747e-4615-9dd5-24243934a7bd",
+              "leftValue": "={{ $json.rut_nif }}\n{{ $json.direccion }}\n{{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        0
+      ],
+      "id": "7f9e2c85-b92f-4aaf-a941-e2e9b6cd8e8b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "ticketName": "Alerta: Fallo en Facturación Automática",
+        "additionalFields": {
+          "description": "❌ Facturación automática fallida: El trato se marcó como Ganado pero faltan datos fiscales del cliente (NIF, Dirección o Email). Por favor, corrígelo."
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        288
+      ],
+      "id": "53e25c86-0c8a-403f-b213-c7d7bd1a8f12",
+      "name": "Create a ticket",
+      "credentials": {
+        "hubspotApi": {
+          "id": "OrNQEGMIOOtUF2MK",
+          "name": "HubSpot account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "customer",
+        "operation": "create",
+        "name": "={{ $json.rut_nif }}\n",
+        "additionalFields": {
+          "address": {
+            "details": {
+              "line1": "={{ $json.direccion_limpia.line1 }}",
+              "city": "={{ $json.direccion_limpia.city }}",
+              "postal_code": "={{ $json.direccion_limpia.postal_code }}"
+            }
+          },
+          "email": "={{ $json.email }}"
+        }
+      },
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -176
+      ],
+      "id": "3b7864b7-5444-4001-ac50-d769e6381479",
+      "name": "Create a customer",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos el arreglo de elementos de n8n\nconst items = $input.all();\n\nconst resultado = items.map(item => {\n  const direccionCompleta = (item.json.direccion || \"\").trim();\n  \n  // Valores por defecto inteligentes por si el string viene vacío\n  let line1 = \"\";\n  let city = \"Springfield\";\n  let postal_code = \"62704\";\n\n  // 1. BLINDAJE CÓDIGO POSTAL: Buscamos 5 números seguidos con Regex (Ej: 62704)\n  const cpMatch = direccionCompleta.match(/\\b\\d{5}\\b/);\n  if (cpMatch) {\n    postal_code = cpMatch[0];\n  }\n\n  // Limpiamos la dirección quitándole el código postal que ya encontramos\n  let textoSinCP = direccionCompleta.replace(postal_code, \"\").trim();\n  \n  // Quitamos comas sueltas que hayan quedado al final tras quitar el CP\n  if (textoSinCP.endsWith(',')) {\n    textoSinCP = textoSinCP.slice(0, -1).trim();\n  }\n\n  // 2. BLINDAJE CALLE Y CIUDAD: ¿Tiene comas?\n  if (textoSinCP.includes(',')) {\n    // Caso ideal: \"Av. Siempre Viva 742, Springfield\"\n    const partes = textoSinCP.split(',');\n    line1 = partes[0].trim();\n    city = partes[1] ? partes[1].trim() : \"Springfield\";\n  } else {\n    // Caso de crisis (Sin comas): \"Av Siempre Viva 742 Springfield\"\n    const palabras = textoSinCP.split(/\\s+/); // Separamos por espacios\n    \n    if (palabras.length > 1) {\n      city = palabras.pop(); // Extraemos la última palabra y asumimos que es la ciudad\n      line1 = palabras.join(\" \"); // Todo lo anterior es la calle\n    } else {\n      line1 = textoSinCP || \"Dirección no especificada\";\n    }\n  }\n\n  // Creamos la estructura limpia para Stripe\n  const direccionDesglosada = {\n    line1: line1,\n    city: city,\n    postal_code: postal_code\n  };\n\n  return {\n    json: {\n      ...item.json,\n      direccion_limpia: direccionDesglosada\n    }\n  };\n});\n\nreturn resultado;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -176
+      ],
+      "id": "4d1dea4e-cb0e-43bf-a6ae-a2675c032358",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "costumer",
+              "value": "={{ $('Create a customer').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        -176
+      ],
+      "id": "0f73c7e4-0129-47ed-b7e9-072afa2e1c2e",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "update",
+        "dealId": {
+          "__rl": true,
+          "value": "12345",
+          "mode": "id"
+        },
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        -176
+      ],
+      "id": "301f78a7-2013-4fb9-bffc-b68f46b9229f",
+      "name": "Update a deal",
+      "credentials": {
+        "hubspotApi": {
+          "id": "OrNQEGMIOOtUF2MK",
+          "name": "HubSpot account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/invoiceitems",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=customer",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "currency",
+              "value": "={{ $json.currency }}"
+            },
+            {
+              "name": "amount",
+              "value": "={{ $json.amount_due }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -176
+      ],
+      "id": "b841e13b-ecb8-4cb7-bb10-6b60d91c2acc",
+      "name": "HTTP Request1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Trigger & Validación Inicial\n• Captura el evento 'deal.propertyChange' cuando un trato cambia de estado a Ganado.\n• Verifica la existencia de campos fiscales obligatorios: RUT/NIF, Dirección y Email.",
+        "height": 352,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -192
+      ],
+      "id": "aa215308-9be2-487b-86b1-cf6807b86b1d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Control de Excepciones (Fallo de Datos)\n • Si faltan datos fiscales requeridos en el trato, interrumpe el flujo de facturación.\n• Genera automáticamente un Ticket de Soporte en HubSpot para que el equipo comercial corrija los datos del cliente.",
+        "height": 320,
+        "width": 432,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        336,
+        80
+      ],
+      "id": "c5979693-62e3-4493-9538-bb9ff9b8c96f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 3. Normalización y Extracción con Regex\n• Limpia la cadena de dirección mediante Node.js/Regex.\n• Extrae el Código Postal de 5 dígitos y desglosa de forma segura la Calle (line1) y la Ciudad (city).",
+        "height": 320,
+        "width": 384,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -384
+      ],
+      "id": "9521a53d-ed38-4aa2-8856-9b6df3e826c6",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Creación de Cliente y Facturación Stripe\n• Crea o asigna el Perfil de Cliente en Stripe con los datos normalizados.\n• POST API Stripe: Agrega el ítem de cobranza (Invoice Item) con el monto del trato.\n• POST API Stripe: Genera y finaliza el borrador de la Factura (Invoice).",
+        "height": 320,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -384
+      ],
+      "id": "845e2dac-220f-4e4b-9239-47eec752a0da",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 5. Sincronización y Cierre de Ciclo CRM\n• Actualiza el trato en HubSpot adjuntando la URL pública de la factura de Stripe (hosted_invoice_url).\n• Notifica/Habilita al equipo de cobranza para la gestión del pago.",
+        "height": 320,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        -384
+      ],
+      "id": "9ffdbc9a-df1d-4cff-bfd9-b570b889298f",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {
+    "HubSpot Trigger": [
+      {
+        "json": {
+          "id": "hubspot_deal_simulation_123",
+          "dealstage": "Closed Won",
+          "rut_nif": "12345678-K",
+          "direccion": "Av. Siempre Viva 742, Springfield, 62704",
+          "email": "cliente.genial@email.com"
+        }
+      }
+    ],
+    "Create a customer": [
+      {
+        "json": {
+          "id": "cus_H17sSimulationPro",
+          "object": "customer",
+          "email": "cliente.genial@email.com",
+          "name": "12345678-K",
+          "amount_due": 5000,
+          "currency": "usd"
+        }
+      }
+    ],
+    "HTTP Request": [
+      {
+        "json": {
+          "id": "in_SimulationInvoice999",
+          "object": "invoice",
+          "customer": "cus_H17sSimulationPro",
+          "amount_due": 5000,
+          "currency": "usd",
+          "status": "draft",
+          "hosted_invoice_url": "https://invoice.stripe.com/i/acct_123/inv_999"
+        }
+      }
+    ],
+    "Update a deal": [
+      {
+        "json": {
+          "id": "hubspot_deal_simulation_123",
+          "properties": {
+            "dealstage": "Closed Won",
+            "stripe_invoice_url": "https://invoice.stripe.com/i/acct_123/inv_999",
+            "hs_lastmodifieddate": "2026-07-01T12:00:00Z"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "HubSpot Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a customer": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update a deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3e18fac2-7dee-4019-a0c1-a67a8fc63eed",
+  "meta": {
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "RUDVuefF3XLaCmkf",
+  "tags": []
+}
