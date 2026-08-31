@@ -1,0 +1,32 @@
+# 💳 Automated B2B CRM-to-Billing Pipeline & Stripe Invoice Generation
+
+Un pipeline avanzado construido en **n8n** que sincroniza el cierre de tratos comerciales en HubSpot con la plataforma de pagos Stripe, automatizando la validación fiscal, la normalización de direcciones mediante Regex y la creación de facturas.
+
+## ⚙️ Arquitectura del Sistema
+
+El flujo de trabajo automatiza todo el ciclo financiero posterior a una venta cerrada:
+
+### 1. 🎯 Trigger & Validación Fiscal
+* **Captura de Eventos:** Se activa mediante un Webhook de HubSpot al cerrarse un trato (*Closed Won*)[cite: 8].
+* **Control de Integridad:** Evalúa si los datos fiscales obligatorios (RUT/NIF, Dirección, Email) están completos[cite: 8]. Si falta información, el sistema interrumpe el proceso y genera un ticket de alerta interno en el CRM para el equipo de ventas[cite: 8].
+
+### 2. 🧹 Normalización de Datos con JavaScript
+* **Procesamiento Inteligente:** Utiliza un nodo de código en JavaScript optimizado con expresiones regulares (Regex) para analizar la dirección del cliente[cite: 8].
+* **Desglose Estructural:** Extrae automáticamente el código postal, separa la calle (*line1*) y define la ciudad (*city*), asegurando una compatibilidad perfecta con las pasarelas de pago[cite: 8].
+
+### 3. 💸 Facturación y Cierre de Ciclo en Stripe & HubSpot
+* **Creación de Perfil:** Da de alta o sincroniza al cliente corporativo en Stripe utilizando los datos normalizados[cite: 8].
+* **Emisión de Factura:** Genera ítems de cobro y emite la factura formal vinculada al monto exacto del trato[cite: 8].
+* **Sincronización Bidireccional:** Actualiza el negocio en HubSpot incorporando la URL pública de la factura de Stripe (`hosted_invoice_url`) para agilizar la gestión del equipo financiero[cite: 8].
+
+## 🛠️ Stack Tecnológico
+* **Orquestación:** n8n (Triggers, condicionales lógicas y manejo de errores).
+* **CRM & Ventas:** HubSpot API (Gestión de Tratos y Tickets).
+* **Pasarela de Pagos:** Stripe API (Creación de Clientes, Items y Facturas vía peticiones HTTP).
+* **Lógica & Procesamiento:** JavaScript / Node.js (Regex y manipulación de estructuras JSON).
+
+## 🚀 Cómo importar este flujo
+1. Descarga el archivo `.json` de este repositorio.
+2. En tu instancia de n8n, ve a *Workflows* > *Import from File...*
+3. Selecciona el archivo descargado.
+4. Configura tus credenciales de HubSpot y las credenciales genéricas de autenticación HTTP para la API de Stripe en los nodos correspondientes[cite: 8].
