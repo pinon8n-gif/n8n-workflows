@@ -1,42 +1,67 @@
-# ⚡ n8n Workflows & Automations
+# ⚡ n8n Workflows & Production Automations
 
-> Colección de flujos de trabajo inteligentes, integraciones de APIs y automatizaciones con IA desarrolladas en n8n.
+[![n8n](https://img.shields.io/badge/n8n-Automation-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)](https://n8n.io)
+[![AI Integrations](https://img.shields.io/badge/AI-LLMs%20%26%20Agents-0052CC?style=for-the-badge&logo=openai&logoColor=white)](#)
+[![Status](https://img.shields.io/badge/Portafolio-Activo-success?style=for-the-badge)](#)
+
+> **Ingeniería de Automatización & Integración de Sistemas:** Colección de flujos de trabajo de nivel empresarial diseñados para optimizar operaciones, reducir costos operativos y conectar arquitecturas cloud con Inteligencia Artificial.
 
 ---
 
-## 📌 Índice de Proyectos
+## 🎯 Soluciones & Valor de Negocio
 
-| # | Proyecto / Flujo | Integraciones principales | Estado |
+Desarrollo soluciones de automatización orientadas a resolver cuellos de botella reales en empresas B2B, agencias y startups:
+
+* **Integración de Ecosistemas:** Conexión sin costuras entre CRMs, pasarelas de pago y canales de comunicación.
+* **Automatización Operativa con IA:** Implementación de agentes autónomos, análisis táctico de datos y pipelines con LLMs.
+* **Robustez & Seguridad:** Diseños resilientes con control de errores nativo, sanitización de datos (Regex/JS) e higiene de credenciales.
+
+---
+
+## 📌 Índice de Proyectos en Producción
+
+| # | Proyecto / Flujo | Integraciones Principales | Estado |
 |---|---|---|---|
 | 01 | [AI-Powered Tech Intelligence Pipeline](./01-tech-intelligence) | n8n, OpenRouter (LLMs), RSS, Google Sheets, Telegram | 🟢 Completado |
-| 02 | [AI-Powered Sports Analytics & Broadcaster System](./02-sports-analytics) | n8n, API REST (football-data), OpenRouter (LLMs), Google Sheets, Telegram | 🟢 Completado |
-| 03 | [AI-Driven Lead Qualification & Routing Engine](./03-lead-scoring) | n8n, Meta Ads, OpenRouter (LLMs), Google Sheets, Telegram, Node.js | 🟢 Completado |
-| 04 | [Automated Lead Magnet Fulfillment & Notification Engine](./04-lead-magnet-fulfillment) | n8n, Webhooks, Google Sheets, Gmail, Telegram, Node.js (Regex) | 🟢 Completado |
+| 02 | [AI-Powered Sports Analytics System](./02-sports-analytics) | n8n, REST API (football-data), OpenRouter, Google Sheets, Telegram | 🟢 Completado |
+| 03 | [AI-Driven Lead Qualification Engine](./03-lead-scoring) | n8n, Meta Ads, OpenRouter (LLMs), Google Sheets, Telegram, Node.js | 🟢 Completado |
+| 04 | [Automated Lead Magnet Fulfillment Engine](./04-lead-magnet-fulfillment) | n8n, Webhooks, Google Sheets, Gmail API, Telegram, Regex | 🟢 Completado |
 | 05 | [Automated B2B CRM-to-Billing Pipeline](./05-crm-stripe-billing) | n8n, HubSpot API, Stripe API, Node.js (Regex) | 🟢 Completado |
-| 06 | *Proyecto 6 (Arquitectura en desarrollo)* | *Definiendo herramientas...* | 🟡 En proceso |
+| 06 | *Enterprise Multi-Agent Orchestrator* | *Arquitectura en diseño...* | 🟡 En proceso |
 
 ---
 
-## 🚀 ¿Cómo importar y usar estos flujos?
+## 🧰 Tech Stack & Herramientas
 
-1. Elige un proyecto de la lista superior e ingresa a su carpeta.
-2. Descarga o copia el contenido del archivo `workflow.json`.
-3. Abre tu instancia de n8n.
-4. En el menú superior de un nuevo flujo, selecciona **Import from JSON** (o usa el atajo `Ctrl + v` / `Cmd + v`).
-5. **Configura las credenciales:** Asigna tus propias claves de API en los nodos correspondientes.
+* **Orquestación & Core:** n8n (Self-hosted / Cloud), Webhooks, Cron Jobs, Sub-workflows, Error Handling.
+* **APIs & Integraciones B2B:** Stripe API, HubSpot CRM, Meta Ads API, Gmail API, Telegram Bot API.
+* **Inteligencia Artificial:** OpenRouter, OpenAI, LangChain, Prompt Engineering.
+* **Desarrollo & Lógica:** JavaScript (Node.js), Data Transformation, Regex, JSON Parsing.
+* **Bases de Datos:** Google Sheets API, REST APIs.
+
+---
+
+## 💼 ¿Buscas automatizar tu negocio o contratar un especialista?
+
+Disponible para roles de **n8n Developer**, **Automation Engineer** (Full-time / Part-time) o proyectos de consultoría freelance:
+
+* 🚀 **Auditoría y optimización** de flujos existentes en n8n o Make.
+* 🤖 **Integración de modelos de IA** a tus canales de venta o soporte.
+* 🛠️ **Desarrollo de conectores personalizados** mediante APIs REST y Webhooks.
 
 ---
 
 ## 🔒 Buenas Prácticas de Seguridad
 
 * Todos los archivos `.json` en este repositorio han sido higienizados y no contienen credenciales, claves de API ni tokens privados.
-* Se utilizan variables de entorno o marcadores de posición (placeholders) como `TU_API_KEY_AQUI`.
+* Se utilizan variables de entorno y marcadores de posición (`TU_API_KEY_AQUI`).
 
 ---
 
-## 👤 Autor
+## 👤 Contacto Professional
 
-Desarrollado por **Andrés Pino**
+**Andrés Pino** — *n8n Developer & AI Automation Engineer*
 
 * **GitHub:** [@pinon8n-gif](https://github.com/pinon8n-gif)
-* **Especialidad:** n8n Developer & AI Automation Engineer
+* **Especialidad:** Automatización de Procesos B2B, Integración de APIs & Agentes de IA
+* **Contacto:** *Disponible a través de mensaje privado en GitHub o LinkedIn.*
