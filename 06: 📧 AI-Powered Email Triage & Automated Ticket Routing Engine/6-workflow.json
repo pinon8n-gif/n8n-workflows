@@ -1,0 +1,430 @@
+{
+  "name": "6-Powered Email Triage & Automated Ticket Routing Engine copy",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "label:INBOX",
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "c5edf368-8ad6-4665-abb4-9a1c40984d33",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "emVcecSv40mZ2ZYh",
+          "name": "your Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza el siguiente correo electrónico enviado por un cliente:\n\nREMITENTE (DETALLES DEL SENDER):\n{{ $json.from.text || $json.headers.from || \"No disponible\" }}\n\nASUNTO:\n{{ $json.subject }}\n\n--- INICIO DEL CORREO ---\n{{ $json.text || $json.snippet || \"Sin contenido de texto disponible.\" }}\n--- FIN DEL CORREO ---\n\n",
+        "options": {
+          "systemMessage": "Eres un Asistente Senior de Triage y Soporte Técnico para atención al cliente. Tu único objetivo es analizar correos entrantes de manera rápida, precisa y objetiva.\n\nReglas de extracción y clasificación:\n1. \"categoria\": Clasifica la intención principal del correo ÚNICAMENTE en una de estas 3 opciones:\n   - \"Soporte Técnico\": Consultas sobre fallos en la plataforma, errores del sistema, caídas de servicio o problemas de acceso.\n   - \"Facturación\": Solicitudes sobre cobros, facturas, comprobantes, pagos pendientes, reembolsos o cambios de plan tarifario.\n   - \"Spam\": Promociones no solicitadas, ofertas comerciales, boletines masivos o correos sospechosos/maliciosos.\n\n2. \"nombre_cliente\": Extrae el nombre de la persona que firma o envía el correo. Si el correo no incluye un nombre claro, responde estrictamente \"Desconocido\".\n\n3. \"resumen_problema\": Redacta una sola frase clara, directa y sintetizada que resuma la necesidad o fallo reportado por el cliente. Si es Spam, indica brevemente \"Correo publicitario o no deseado\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "992f2f5c-1ef0-4aa1-a976-2a0d0c7d614f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "Soporte Técnico",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4f981c8a-fbd7-411c-8d54-84fd0b92fcc7"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5a3ede89-5bd0-4350-b01b-723a05b3ba11",
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "Facturación",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "eb0850a2-7333-4009-b232-49f316b56f7d",
+                    "leftValue": "={{ $json.categoria }}",
+                    "rightValue": "Spam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "fd8fa427-700f-4a77-ad86-88ec0c193d3c",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "listId": "=YOUR_LIST_ID",
+        "name": "==🚨 [SOPORTE] {{ $json.nombre_cliente }} - {{ $json.resumen_problema }}",
+        "description": "==### 📋 Detalles del Ticket de Soporte\n\n👤 **Cliente:** {{ $json.nombre_cliente }}\n✉️ **Remitente:** {{ $('Gmail Trigger').item.json.from.value[0].address || $('Gmail Trigger').item.json.from.text }}\n📌 **Asunto Original:** {{ $('Gmail Trigger').item.json.subject }}\n📅 **Fecha:** {{ $('Gmail Trigger').item.json.date }}\n\n---\n\n📝 **Resumen Inteligente (IA):**\n{{ $json.resumen_problema }}\n\n---\n\n🔗 **ID de Hilo en Gmail:** {{ $('Gmail Trigger').item.json.threadId }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -144
+      ],
+      "id": "4aeb4da2-1028-4109-9b4e-c99a84f705c3",
+      "name": "Create a card",
+      "retryOnFail": true,
+      "credentials": {
+        "trelloApi": {
+          "id": "XbFna9icl7YpJ1SN",
+          "name": "Trello account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "trash",
+        "threadId": "={{ $('Gmail Trigger').item.json.threadId }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        160
+      ],
+      "id": "ee1c913c-7a84-44bd-9e11-81b5fe558e92",
+      "name": "Trash a thread",
+      "webhookId": "53b2c97a-7667-45d2-a789-a610c117aa69",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "emVcecSv40mZ2ZYh",
+          "name": "your Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        192,
+        208
+      ],
+      "id": "ae920516-9e51-4605-9f39-78b99caa1ead",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "zShyFB5AWK3D0uou",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Capturamos los elementos recibidos del AI Agent\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  let outputRaw = item.json.output || \"\";\n  let jsonParsed = null;\n\n  if (typeof outputRaw === 'string') {\n    // 1. Limpiamos caracteres de formato, saltos de línea y Markdown (```json ... ```)\n    let cleanedString = outputRaw\n      .replace(/```json/gi, '')\n      .replace(/```/g, '')\n      .replace(/\\\\n/g, ' ')\n      .replace(/\\n/g, ' ')\n      .trim();\n\n    // 2. Intentamos parsear la cadena limpia\n    try {\n      jsonParsed = JSON.parse(cleanedString);\n    } catch (e) {\n      // Si falla, extraemos únicamente el contenido entre llaves { ... } con Regex\n      const jsonMatch = cleanedString.match(/\\{[\\s\\S]*\\}/);\n      if (jsonMatch) {\n        try {\n          jsonParsed = JSON.parse(jsonMatch[0]);\n        } catch (err) {\n          jsonParsed = null;\n        }\n      }\n    }\n  } else if (typeof outputRaw === 'object' && outputRaw !== null) {\n    jsonParsed = outputRaw;\n  }\n\n  // 3. Estructuramos la salida sin errores de sintaxis\n  if (jsonParsed) {\n    results.push({\n      json: {\n        categoria: jsonParsed.categoria || \"Spam\",\n        nombre_cliente: jsonParsed.nombre_cliente || \"Desconocido\",\n        resumen_problema: jsonParsed.resumen_problema || outputRaw\n      }\n    });\n  } else {\n    results.push({\n      json: {\n        categoria: \"Spam\",\n        nombre_cliente: \"Desconocido\",\n        resumen_problema: typeof outputRaw === 'string' ? outputRaw.trim() : \"Correo procesado\"\n      }\n    });\n  }\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "d8bed0c0-03fd-4881-8e7d-0ae5374778b3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "listId": "=YOUR_LIST_ID",
+        "name": "==💳 [FACTURACIÓN] {{ $json.nombre_cliente }} - {{ $json.resumen_problema }}",
+        "description": "==### 💰 Solicitud de Facturación / Pago\n\n👤 **Cliente:** {{ $json.nombre_cliente }}\n✉️ **Correo de Contacto:** {{ $('Gmail Trigger').item.json.from.value[0].address || $('Gmail Trigger').item.json.from.text }}\n📌 **Asunto Original:** {{ $('Gmail Trigger').item.json.subject }}\n\n---\n\n📝 **Detalle de la Solicitud:**\n{{ $json.resumen_problema }}\n\n---\n\n🔗 **ID de Hilo en Gmail:** {{ $('Gmail Trigger').item.json.threadId }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        16
+      ],
+      "id": "cfdb9ab6-7aa2-452d-b29f-7e30b7b33ae6",
+      "name": "Create a card1",
+      "retryOnFail": true,
+      "credentials": {
+        "trelloApi": {
+          "id": "XbFna9icl7YpJ1SN",
+          "name": "Trello account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 1. Ingesta de Correos\n\nMonitoreo activo y polling en tiempo real de la bandeja de entrada para capturar mensajes no leídos (INBOX). Extrae metadatos clave como el asunto, cuerpo y datos del remitente para iniciar el flujo de automatización.",
+        "height": 400,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -288
+      ],
+      "id": "27bb8d5d-85eb-47b0-9c42-2ed846e5fab7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "##  2. Motor de IA (OpenRouter LLM)\n\nProcesamiento de Lenguaje Natural (NLP) impulsado por un agente inteligente conectado a OpenRouter. Analiza el contenido del correo para clasificar la intención del cliente, extraer su nombre y redactar un resumen ejecutivo del problema.",
+        "height": 400,
+        "width": 320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -288
+      ],
+      "id": "3e9cde8c-3977-4191-95a6-aac2ad5c639e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "##  3. Sanitización de Datos \n\nCapa de procesamiento defensivo mediante JavaScript en Node.js. Remueve wrappers de Markdown (```json), maneja excepciones sintácticas y transforma el output de la IA en un objeto JSON nativo y limpio para su lectura en los nodos posteriores.",
+        "height": 400,
+        "width": 320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -288
+      ],
+      "id": "f789b71b-b4d9-44e5-a5e9-311e67649f6e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Enrutamiento Inteligente (Switch)\nEvaluación condicional de la propiedad categoria. Segmenta la ejecución del flujo en tiempo real enviando la carga de datos hacia las ramas de Soporte Técnico, Facturación o Spam según el resultado del triaje.",
+        "height": 400,
+        "width": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -288
+      ],
+      "id": "ca5ad1a1-1016-4795-8f50-24522c0acbf9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "##  5. Ejecución & Limpieza (Trello & Gmail):\n\nCreación automatizada de tarjetas estructuradas en los tableros correspondientes de Trello (Soporte o Finanzas) con enlace directo al hilo de Gmail. En caso de detectar Spam, ejecuta la API de Gmail para enviar la conversación directamente a la papelera.",
+        "height": 640,
+        "width": 608,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -352
+      ],
+      "id": "a30e2bfc-5a89-49b7-96ea-700adcb5ca6b",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "18c2f1a9a8b12345",
+          "threadId": "18c2f1a9a8b12345",
+          "subject": "URGENTE: Error 500 al ingresar al panel de administración",
+          "snippet": "Hola equipo de soporte, desde esta mañana ningún usuario de nuestro equipo puede ingresar a la plataforma...",
+          "text": "Hola equipo de soporte,\n\nDesde esta mañana estamos experimentando problemas graves para ingresar a la plataforma. Al intentar iniciar sesión en el dashboard principal, nos aparece un error de servidor 'HTTP 500 Internal Server Error'.\n\nNuestra operación está completamente detenida por este inconveniente. Les pido ayuda urgente para revisar qué ocurre con nuestro servidor o cuenta.\n\nQuedo a la espera de su respuesta,\nCarlos Mendoza\nDirector de Operaciones - InnovaCorp",
+          "headers": {
+            "from": "Carlos Mendoza <carlos.mendoza@innovacorp.com>",
+            "to": "soporte@tuempresa.com",
+            "date": "Wed, 12 Aug 2026 11:45:00 -0400"
+          },
+          "from": {
+            "value": [
+              {
+                "name": "Carlos Mendoza",
+                "address": "carlos.mendoza@innovacorp.com"
+              }
+            ],
+            "text": "Carlos Mendoza <carlos.mendoza@innovacorp.com>"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Create a card",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a card1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Trash a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "83f5ec91-7861-48d5-9523-df03284ddd29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "tJtVojVBuzsimAzo",
+  "tags": []
+}
