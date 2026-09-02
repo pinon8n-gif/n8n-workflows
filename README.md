@@ -12,9 +12,9 @@
 
 Desarrollo soluciones de automatización orientadas a resolver cuellos de botella reales en empresas B2B, agencias y startups:
 
-* **Integración de Ecosistemas:** Conexión sin costuras entre CRMs, pasarelas de pago y canales de comunicación.
-* **Automatización Operativa con IA:** Implementación de agentes autónomos, análisis táctico de datos y pipelines con LLMs.
-* **Robustez & Seguridad:** Diseños resilientes con control de errores nativo, sanitización de datos (Regex/JS) e higiene de credenciales.
+* **Integración de Ecosistemas:** Conexión sin costuras entre CRMs, pasarelas de pago y canales de comunicación[cite: 8, 9].
+* **Automatización Operativa con IA:** Implementación de agentes autónomos, triaje inteligente y pipelines con LLMs[cite: 9].
+* **Robustez & Seguridad:** Diseños resilientes con control de errores nativo, sanitización de datos (Regex/JS) e higiene de credenciales[cite: 7, 8, 9].
 
 ---
 
@@ -27,17 +27,18 @@ Desarrollo soluciones de automatización orientadas a resolver cuellos de botell
 | 03 | [AI-Driven Lead Qualification Engine](./03-lead-scoring) | n8n, Meta Ads, OpenRouter (LLMs), Google Sheets, Telegram, Node.js | 🟢 Completado |
 | 04 | [Automated Lead Magnet Fulfillment Engine](./04-lead-magnet-fulfillment) | n8n, Webhooks, Google Sheets, Gmail API, Telegram, Regex | 🟢 Completado |
 | 05 | [Automated B2B CRM-to-Billing Pipeline](./05-crm-stripe-billing) | n8n, HubSpot API, Stripe API, Node.js (Regex) | 🟢 Completado |
-| 06 | *Enterprise Multi-Agent Orchestrator* | *Arquitectura en diseño...* | 🟡 En proceso |
+| 06 | [AI Email Triage & Ticket Routing Engine](./06-email-triage) | n8n, Gmail API, OpenRouter (LLMs), Trello API, Node.js | 🟢 Completado |
+| 07 | *Enterprise Multi-Agent Orchestrator* | *Arquitectura en diseño...* | 🟡 En proceso |
 
 ---
 
 ## 🧰 Tech Stack & Herramientas
 
-* **Orquestación & Core:** n8n (Self-hosted / Cloud), Webhooks, Cron Jobs, Sub-workflows, Error Handling.
-* **APIs & Integraciones B2B:** Stripe API, HubSpot CRM, Meta Ads API, Gmail API, Telegram Bot API.
-* **Inteligencia Artificial:** OpenRouter, OpenAI, LangChain, Prompt Engineering.
-* **Desarrollo & Lógica:** JavaScript (Node.js), Data Transformation, Regex, JSON Parsing.
-* **Bases de Datos:** Google Sheets API, REST APIs.
+* **Orquestación & Core:** n8n (Self-hosted / Cloud), Webhooks, Cron Jobs, Sub-workflows, Error Handling[cite: 7, 8, 9].
+* **APIs & Integraciones B2B:** Stripe API, HubSpot CRM, Gmail API, Trello API, Meta Ads API, Telegram Bot API[cite: 7, 8, 9].
+* **Inteligencia Artificial:** OpenRouter, OpenAI, LangChain Agents, Prompt Engineering[cite: 9].
+* **Desarrollo & Lógica:** JavaScript (Node.js), Data Transformation, Regex, JSON Parsing[cite: 7, 8, 9].
+* **Bases de Datos:** Google Sheets API, REST APIs[cite: 7, 8].
 
 ---
 
@@ -46,19 +47,19 @@ Desarrollo soluciones de automatización orientadas a resolver cuellos de botell
 Disponible para roles de **n8n Developer**, **Automation Engineer** (Full-time / Part-time) o proyectos de consultoría freelance:
 
 * 🚀 **Auditoría y optimización** de flujos existentes en n8n o Make.
-* 🤖 **Integración de modelos de IA** a tus canales de venta o soporte.
-* 🛠️ **Desarrollo de conectores personalizados** mediante APIs REST y Webhooks.
+* 🤖 **Integración de modelos de IA** a tus canales de venta, soporte o gestión de tickets[cite: 9].
+* 🛠️ **Desarrollo de conectores personalizados** mediante APIs REST y Webhooks[cite: 7, 8].
 
 ---
 
 ## 🔒 Buenas Prácticas de Seguridad
 
-* Todos los archivos `.json` en este repositorio han sido higienizados y no contienen credenciales, claves de API ni tokens privados.
-* Se utilizan variables de entorno y marcadores de posición (`TU_API_KEY_AQUI`).
+* Todos los archivos `.json` en este repositorio han sido higienizados y no contienen credenciales, claves de API ni tokens privados[cite: 7, 8, 9].
+* Se utilizan variables de entorno y marcadores de posición (`TU_API_KEY_AQUI`)[cite: 7, 8, 9].
 
 ---
 
-## 👤 Contacto Professional
+## 👤 Contacto Profesional
 
 **Andrés Pino** — *n8n Developer & AI Automation Engineer*
 
