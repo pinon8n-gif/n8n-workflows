@@ -1,0 +1,407 @@
+{
+  "name": "7-AI-Driven B2B Lead Enrichment, VIP Classification & Real-Time CRM Routing Engine copy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "3d49ac72-cc09-4c55-8fcc-bb20a26b1dc2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "a05ba1be-8603-430a-b8ff-9acc00fc066d",
+      "name": "Webhook",
+      "webhookId": "3d49ac72-cc09-4c55-8fcc-bb20a26b1dc2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apollo.io/v1/people/match",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "no-cache",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "\"api_key\": \"TU_APOLLO_API_KEY\",",
+              "value": "={{ $json.lead_email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "0fce0922-6259-40f2-af2d-8bd9ab5c84cb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza el siguiente lead B2B para determinar su prioridad comercial:\n\n- Empresa: {{ $json.person.organization.name }}\n- Tamaño: {{ $json.person.organization.estimated_num_employees }} empleados\n- País: {{ $json.person.organization.country }}\n- Industria: {{ $json.person.organization.industry }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un motor de calificación de leads B2B para un equipo de ventas enterprise.\nTu objetivo es evaluar los datos recibidos y clasificar al prospecto.\n\nREGLAS DE CLASIFICACIÓN:\n1. High Value: Empresas con más de 50 empleados O pertenecientes a las industrias de Software, Tecnología o Finanzas.\n2. Low Value: Empresas con 50 o menos empleados que no pertenezcan a sectores estratégicos.\n\nREGLAS DE SALIDA ESTRICTAS:\n- Responde UNICAMENTE con un objeto JSON válido.\n- No incluyas introducción, saludos, conclusiones ni texto explicativo fuera del JSON.\n\nESTRUCTURA DEL JSON:\n{\n  \"classification\": \"High Value\" | \"Low Value\",\n  \"reason\": \"Explicación concisa y profesional (máximo 15 palabras) justificando el resultado según las reglas.\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "4e9cb267-bab3-4f67-b335-d710411f4006",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Capturamos el texto crudo que viene de la IA (manejando variantes comunes de campos)\nconst textFromAI = $input.item.json.output || $input.item.json.text || \"\";\n\ntry {\n  // 2. Implementación de Regex para capturar todo lo que esté entre { y }\n  const jsonRegex = /\\{[\\s\\S]*\\}/;\n  const match = textFromAI.match(jsonRegex);\n\n  if (match) {\n    // Extraemos el string JSON puro y lo parseamos a un objeto real\n    const parsedData = JSON.parse(match[0]);\n    \n    // 3. Mapeo Dinámico: Entregamos la data estructurada dentro de 'output_limpio'\n    return [{\n      json: {\n        output_limpio: {\n          classification: parsedData.classification || parsedData.output?.classification || \"Low Value\",\n          reason: parsedData.reason || parsedData.output?.reason || \"No se especificó la razón.\"\n        }\n      }\n    }];\n  } else {\n    throw new Error(\"No se detectaron llaves JSON en la respuesta de la IA.\");\n  }\n} catch (error) {\n  // Bloque de contingencia ultra-seguro para producción si la IA colapsa\n  return [{\n    json: {\n      output_limpio: {\n        classification: \"Low Value\",\n        reason: \"Error de parseo corregido automáticamente por el sistema: \" + error.message\n      }\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -16
+      ],
+      "id": "d4ff600c-b5ea-44af-a1b7-6cec4b32d103",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e66270d-24e0-4945-ae42-feef253efa41",
+              "leftValue": "={{ $json.output_limpio.classification }}",
+              "rightValue": "High Value",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        848,
+        -16
+      ],
+      "id": "06afd941-b57a-473b-8d3a-23f5dc08c2b3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "email": "={{ $('HTTP Request').item.json.person.email }}",
+        "additionalFields": {
+          "companyName": "={{ $('HTTP Request').item.json.person.organization.name }}",
+          "companySize": "={{ $('HTTP Request').item.json.person.organization.estimated_num_employees }}",
+          "country": "={{ $('HTTP Request').item.json.person.organization.country }}",
+          "firstName": "={{ $('HTTP Request').item.json.person.name }}",
+          "industry": "={{ $('HTTP Request').item.json.person.organization.industry }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        -96
+      ],
+      "id": "92f178d3-1095-47ba-98b2-8221df76685a",
+      "name": "Create or update a contact",
+      "credentials": {
+        "hubspotApi": {
+          "id": "OrNQEGMIOOtUF2MK",
+          "name": "Your HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "=YOUR_CHAT_ID_OR_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "=🚨 *¡NUEVO LEAD HIGH-VALUE DETECTADO EN TIEMPO REAL!* 🚨\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n👤 *Nombre:* {{ $('HTTP Request').item.json.person.name }}\n✉️ *Correo:* {{ $('HTTP Request').item.json.person.email }}\n🏢 *Empresa:* {{ $('HTTP Request').item.json.person.organization.name }}\n📈 *Tamaño:* {{ $('HTTP Request').item.json.person.organization.estimated_num_employees }} empleados\n\n🧠 *Análisis de la IA:*\n> \"{{ $json.output_limpio.reason }}\"\n\n💼 *Acción requerida:* ¡Atiende a este lead ahora mismo en HubSpot!",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1504,
+        -96
+      ],
+      "id": "a5a0b388-105e-4a4b-8428-237eacf7dcb2",
+      "name": "Send a message",
+      "webhookId": "fa5ed5da-d075-42f6-9dae-13f40f38bbe2",
+      "credentials": {
+        "slackApi": {
+          "id": "U0tPWgP76zw73khY",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "email": "={{ $('HTTP Request').item.json.person.email }}",
+        "additionalFields": {
+          "companySize": "={{ $('HTTP Request').item.json.person.organization.estimated_num_employees }}",
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "value": "={{ $('Code in JavaScript1').item.json.output_limpio.reason }}"
+              }
+            ]
+          },
+          "firstName": "={{ $('HTTP Request').item.json.person.name }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        64
+      ],
+      "id": "6b65e6aa-42dd-49f4-8a87-4a983e1d52dd",
+      "name": "Create or update a contact1",
+      "credentials": {
+        "hubspotApi": {
+          "id": "OrNQEGMIOOtUF2MK",
+          "name": "Your HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        208,
+        144
+      ],
+      "id": "ea50219d-201b-4dad-b47a-e64daa308c46",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ulZK5LajdP5PKvWo",
+          "name": "your OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Fase 1: Ingesta & Enriquecimiento B2B\n\n### 1. INGESTA Y ENRIQUECIMIENTO (APOLLO.IO)\n- **Webhook Input:** Recepción en tiempo real de leads entrantes.\n- **HTTP Request (Mock):** Simula el enriquecimiento B2B vía Apollo API consumiendo datos de la organización (empleados, industria, país).",
+        "height": 464,
+        "width": 496
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -272
+      ],
+      "id": "582066b1-5793-4a16-9a11-f6296ff4a8b6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Fase 2: Motor IA & Parsing de Resiliencia\n\n### 2. CLASIFICACIÓN IA & DATA SANITIZATION\n- **LLM Chain (OpenRouter):** Evalúa el contexto del lead con reglas B2B estrictas para catalogarlo como High o Low Value.\n- **JavaScript Parser (Regex Safe):** Extrae y valida el bloque JSON de la respuesta del modelo, incluyendo un bloque de contingencia en caso de alucinación del LLM.\n\n",
+        "height": 464,
+        "width": 496,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -272
+      ],
+      "id": "346bacb3-c1d9-42f5-b3a5-d95f36adfd8c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Fase 3: Lógica de Enrutamiento\n\n### 3. ROUTING\n- **IF Node:** Bifurca el tráfico según `output_limpio.classification` (High Value vs. Low Value).\n",
+        "height": 352,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -208
+      ],
+      "id": "621e0fa7-668a-45df-aad9-d52354ae0f91",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Fase 4: Omnicanalidad & CRM (HubSpot & Slack)\n\n### 4. ACTUALIZACIÓN CRM & ALERTAS OMNICANAL\n- **HubSpot (High Value):** Crea/Actualiza contacto con perfil completo.\n- **Slack Alert:** Notificación instantánea al canal de ventas con resumen del análisis de la IA.\n- **HubSpot (Low Value):** Registro automático y asignación de razón de descalificación sin saturar Slack.",
+        "height": 528,
+        "width": 576,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        -336
+      ],
+      "id": "d34ffec3-9c55-493a-9640-ea3285ce29d6",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {
+    "HTTP Request": [
+      {
+        "json": {
+          "person": {
+            "name": "Juan Perez",
+            "email": "juan@empresa-ejemplo.com",
+            "organization": {
+              "name": "Tech Global Innovators S.A.",
+              "estimated_num_employees": 250,
+              "country": "México",
+              "industry": "Software & Technology"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create or update a contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create or update a contact1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a contact": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "505872a6-ead6-4899-9c7a-454b6531a706",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "EcgqEOQsXhHkZjp6",
+  "tags": []
+}
