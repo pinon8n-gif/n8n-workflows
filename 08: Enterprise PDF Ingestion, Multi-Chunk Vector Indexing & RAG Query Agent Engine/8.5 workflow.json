@@ -1,0 +1,218 @@
+{
+  "name": "Proyecto 8.5: Multi-Source RAG Query Agent with OpenRouter Free Tier & Qdrant Vector Search Engine copy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7facfb69-f902-49da-b414-7a98d7185344",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "54f7c3d4-2f61-4372-8180-204d2e4e5bdd",
+      "name": "Webhook",
+      "webhookId": "7facfb69-f902-49da-b414-7a98d7185344"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.pregunta }}",
+        "options": {
+          "systemMessage": "Eres un Asistente Senior de Auditoría Interna. Tu único objetivo es responder la pregunta del usuario basándote EXCLUSIVAMENTE en la información recuperada de los documentos de auditoría proporcionados por tu herramienta de búsqueda (Qdrant Vector Store).\n\nREGLAS DE OBLIGADO CUMPLIMIENTO:\n1. Usa la herramienta de búsqueda vectorial para obtener el contexto relevante antes de responder.\n2. Si la información necesaria para responder la pregunta NO se encuentra en los fragmentos recuperados, responde estrictamente: \"No dispongo de esa información en los informes de auditoría interna cargados.\"\n3. No inventes, deduzcas ni presupongas datos que no estén explícitamente escritos en los documentos.\n4. Redacta tu respuesta en español, de forma profesional, clara, objetiva y directa."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        16
+      ],
+      "id": "d718f264-7739-4f56-881e-654376e0b29f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Utiliza esta herramienta para buscar y recuperar información específica sobre el informe de auditorías internas de la empresa.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "",
+          "mode": "id",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        16
+      ],
+      "id": "e7c688ca-d1fc-4344-a2a6-702c36e0d17e",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "J7hHNdZPiMQhZgru",
+          "name": "Your Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        208,
+        160
+      ],
+      "id": "b05750ae-fd2b-4c26-9bd1-0b2e40574cc4",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ulZK5LajdP5PKvWo",
+          "name": "your OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        624,
+        128
+      ],
+      "id": "c5324d18-5d42-40fe-9be3-f4062c2d030a",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xUZQ3uIFkCs3hwUI",
+          "name": "Your Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 1 Entrada del Payload HTTP\n### 1. INBOUND API \nDescripción: Recibe la consulta del usuario vía POST capturando el campo {{ $json.body.pregunta }} para ser evaluado por el agente.  ",
+        "height": 448,
+        "width": 384,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -240
+      ],
+      "id": "2456a898-2460-46b9-ab84-61cae308f701",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 2 Orquestación & Modelo de Lenguaje\n### 2. AGENT ORCHESTRATION & LLM ENGINE \nDescripción: Agente RAG configurado con Prompt de Sistema estricto de auditoría interna conectado al modelo libre de OpenRouter (openrouter/free).  ",
+        "height": 448,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -240
+      ],
+      "id": "a2b0eac8-c1da-48c3-9a70-75e87c15ebb3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 3 Búsqueda Semántica Vectorial\n### 3. VECTOR RETRIEVAL TOOL\nDescripción: Proporciona búsqueda semántica sobre la colección auditorias_internas en Qdrant utilizando Embeddings homogéneos de 768d con Ollama.   ",
+        "height": 448,
+        "width": 384,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -240
+      ],
+      "id": "b1e23129-efb6-49db-8a3b-b4df579924f0",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7b183c8e-6d09-4211-b9d7-95cba2608394",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "jkQD0qjxiav3GqQw",
+  "tags": [
+    {
+      "updatedAt": "2026-09-11T20:38:54.749Z",
+      "createdAt": "2026-09-11T20:38:54.749Z",
+      "id": "v80F7qlqZvry17zC",
+      "name": "no credentials"
+    }
+  ]
+}

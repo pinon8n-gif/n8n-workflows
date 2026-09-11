@@ -1,0 +1,235 @@
+{
+  "name": "Proyecto 8.0: Enterprise PDF Ingestion & Multi-Chunk Vector Indexing Pipeline (n8n, Local Ollama Embeddings & Terminal-Hosted Qd",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        32
+      ],
+      "id": "fe5d6c94-3cf2-4a3f-adff-b5cbee31bc82",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "[YOUR_FILE_PATH]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        32
+      ],
+      "id": "c6660546-eaaf-4613-b4a4-5a83c341e1c6",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "",
+          "mode": "id",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        32
+      ],
+      "id": "b3a2ccef-4e3e-48e8-b16a-b3628bab8aef",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "J7hHNdZPiMQhZgru",
+          "name": "Your Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        336,
+        160
+      ],
+      "id": "004416fd-7966-4d84-907a-c5d728b41164",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        800,
+        192
+      ],
+      "id": "4660aa2c-a12c-4c8e-ba14-4754a547a23c",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xUZQ3uIFkCs3hwUI",
+          "name": "Your Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "pdfLoader",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        32
+      ],
+      "id": "c6965e33-789f-434f-8e96-611e9feb1376",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "## Entrada & Lectura del Sistema de Archivos\n1. FILE INGESTION & TRIGGER\nDescripción: Dispara la lectura de documentos locales especificando el selector de archivos PDF (*.pdf) en el directorio local.",
+        "height": 448,
+        "width": 448,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -176
+      ],
+      "id": "750b7a62-bad3-4201-b430-c6f27ac95d57",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Procesamiento & Vectorización\n2. DOCUMENT PARSING & CHUNKING\nDescripción: Parsea el contenido binario del PDF y aplica segmentación recursiva (Chunk Size: 1000, Overlap: 200) para preservar el contexto de auditoría.",
+        "height": 448,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -176
+      ],
+      "id": "2511e26a-df06-48ef-8aa8-cd8a115cb7e9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Indexación en Vector Database\n3. LOCAL EMBEDDINGS & QDRANT STORAGE\nConvierte los fragmentos en vectores densos de 768d usando el modelo nomic-embed-text e inserta los registros en la colección auditorias_internas mediante la instancia local de Qdrant.  ",
+        "height": 448,
+        "width": 448,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -176
+      ],
+      "id": "41e75879-d62f-4213-bb46-225206bc6004",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ab6e9210-ad4a-4c69-9d6f-106bed697586",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b97532291c8fd4810c5c0b7f0619f8a42a4753dabb089c48fa521bc80a195a5a"
+  },
+  "nodeGroups": [],
+  "id": "S0QQKc1IaGyvzBgb",
+  "tags": [
+    {
+      "updatedAt": "2026-09-11T20:38:54.749Z",
+      "createdAt": "2026-09-11T20:38:54.749Z",
+      "id": "v80F7qlqZvry17zC",
+      "name": "no credentials"
+    }
+  ]
+}
